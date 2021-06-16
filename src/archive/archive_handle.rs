@@ -27,7 +27,7 @@ impl Drop for ArchiveHandle {
     }
 }
 
-impl ::archive::Handle for ArchiveHandle {
+impl crate::archive::Handle for ArchiveHandle {
     unsafe fn handle(&self) -> &mut ffi::Struct_archive {
         &mut *self.handle
     }

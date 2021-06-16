@@ -1,14 +1,13 @@
 use std::default::Default;
-use std::error::Error;
 use std::ffi::CString;
 use std::io::{self, Read, Seek, SeekFrom};
 
-use libc::{c_void, ssize_t, c_int, int64_t, SEEK_SET, SEEK_CUR, SEEK_END};
+use libc::{c_void, ssize_t, c_int, SEEK_SET, SEEK_CUR, SEEK_END};
 use libarchive3_sys::ffi;
 
-use archive::{ArchiveHandle, Handle};
-use entry::BorrowedEntry;
-use error::{ArchiveResult, ArchiveError};
+use crate::archive::{ArchiveHandle, Handle};
+use crate::entry::BorrowedEntry;
+use crate::error::{ArchiveResult, ArchiveError};
 use super::{Builder, Reader};
 
 pub struct StreamReader<T> {
@@ -34,7 +33,7 @@ impl<T> Pipe<T> {
         self.reader.read(&mut self.buffer[..])
     }
 
-    fn seek(&mut self, pos: SeekFrom) -> io::Result<(u64)> where T: Seek {
+    fn seek(&mut self, pos: SeekFrom) -> io::Result<u64> where T: Seek {
         self.reader.seek(pos)
     }
 }
@@ -58,7 +57,7 @@ impl<T> StreamReader<T> {
                     Ok(reader)
                 }
                 _ => {
-                    Err(ArchiveError::from(&builder as &Handle))
+                    Err(ArchiveError::from(&builder as &dyn Handle))
                 }
             }
         }
@@ -69,7 +68,7 @@ impl<T> StreamReader<T> {
             // Seek callback setter must be called before archive_read_open()
             match ffi::archive_read_set_seek_callback(builder.handle(), Some(stream_seek_callback::<T>)) {
                 ffi::ARCHIVE_OK => {},
-                _ => { return Err(ArchiveError::from(&builder as &Handle)) },
+                _ => { return Err(ArchiveError::from(&builder as &dyn Handle)) },
             }
         };
         Self::open(builder, src)
@@ -101,7 +100,7 @@ unsafe extern "C" fn stream_read_callback<T: Read>(handle: *mut ffi::Struct_arch
     match pipe.read_bytes() {
         Ok(size) => size as ssize_t,
         Err(e) => {
-            let desc = CString::new(e.description()).unwrap();
+            let desc = CString::new(e.to_string()).unwrap();
             ffi::archive_set_error(handle, e.raw_os_error().unwrap_or(0), desc.as_ptr());
             -1 as ssize_t
         }
@@ -110,8 +109,8 @@ unsafe extern "C" fn stream_read_callback<T: Read>(handle: *mut ffi::Struct_arch
 
 unsafe extern "C" fn stream_seek_callback<T: Seek>(handle: *mut ffi::Struct_archive,
                                                    data: *mut c_void,
-                                                   offset: int64_t, whence: c_int)
-                                                   -> int64_t {
+                                                   offset: i64, whence: c_int)
+                                                   -> i64 {
     let pipe: &mut Pipe<T> = &mut *(data as *mut Pipe<T>);
 
     let pos = match whence {
@@ -123,11 +122,11 @@ unsafe extern "C" fn stream_seek_callback<T: Seek>(handle: *mut ffi::Struct_arch
     };
 
     match pipe.seek(pos) {
-        Ok(new_pos) => new_pos as int64_t,
+        Ok(new_pos) => new_pos as i64,
         Err(e) => {
-            let desc = CString::new(e.description()).unwrap();
+            let desc = CString::new(e.to_string()).unwrap();
             ffi::archive_set_error(handle, e.raw_os_error().unwrap_or(0), desc.as_ptr());
-            ffi::ARCHIVE_FATAL as int64_t
+            ffi::ARCHIVE_FATAL as i64
         }
     }
 }

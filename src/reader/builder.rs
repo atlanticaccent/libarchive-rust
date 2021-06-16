@@ -6,8 +6,8 @@ use std::path::Path;
 
 use libarchive3_sys::ffi;
 
-use archive::{ArchiveHandle, ReadCompression, ReadFilter, ReadFormat, Handle};
-use error::ArchiveResult;
+use crate::archive::{ArchiveHandle, ReadCompression, ReadFilter, ReadFormat, Handle};
+use crate::error::ArchiveResult;
 use super::{FileReader, StreamReader};
 
 pub struct Builder {
@@ -56,7 +56,7 @@ impl Builder {
         };
         match result {
             ffi::ARCHIVE_OK => Ok(()),
-            _ => ArchiveResult::from(self as &Handle),
+            _ => ArchiveResult::from(self as &dyn Handle),
         }
     }
 
@@ -93,7 +93,7 @@ impl Builder {
         };
         match result {
             ffi::ARCHIVE_OK => Ok(()),
-            _ => ArchiveResult::from(self as &Handle),
+            _ => ArchiveResult::from(self as &dyn Handle),
         }
     }
 
@@ -119,7 +119,7 @@ impl Builder {
         };
         match result {
             ffi::ARCHIVE_OK => Ok(()),
-            _ => ArchiveResult::from(self as &Handle),
+            _ => ArchiveResult::from(self as &dyn Handle),
         }
     }
 

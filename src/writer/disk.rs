@@ -4,10 +4,10 @@ use std::ptr;
 
 use libarchive3_sys::ffi;
 
-use archive::{ArchiveHandle, ExtractOptions, Handle};
-use reader::Reader;
-use entry::{Entry, BorrowedEntry};
-use error::{ArchiveResult, ArchiveError};
+use crate::archive::{ArchiveHandle, ExtractOptions, Handle};
+use crate::reader::Reader;
+use crate::entry::{Entry, BorrowedEntry};
+use crate::error::{ArchiveResult, ArchiveError};
 
 pub struct Disk {
     handle: ArchiveHandle,
@@ -35,7 +35,7 @@ impl Disk {
         unsafe {
             match ffi::archive_write_set_bytes_per_block(self.handle(), count) {
                 ffi::ARCHIVE_OK => Ok(()),
-                _ => ArchiveResult::from(self as &Handle),
+                _ => ArchiveResult::from(self as &dyn Handle),
             }
         }
     }
@@ -44,7 +44,7 @@ impl Disk {
         unsafe {
             match ffi::archive_write_set_bytes_in_last_block(self.handle(), count) {
                 ffi::ARCHIVE_OK => Ok(()),
-                _ => ArchiveResult::from(self as &Handle),
+                _ => ArchiveResult::from(self as &dyn Handle),
             }
         }
     }
@@ -54,7 +54,7 @@ impl Disk {
         unsafe {
             match ffi::archive_write_disk_set_options(self.handle(), eopt.flags) {
                 ffi::ARCHIVE_OK => Ok(()),
-                _ => ArchiveResult::from(self as &Handle),
+                _ => ArchiveResult::from(self as &dyn Handle),
             }
         }
     }
@@ -67,7 +67,7 @@ impl Disk {
         unsafe {
             match ffi::archive_write_disk_set_standard_lookup(self.handle()) {
                 ffi::ARCHIVE_OK => Ok(()),
-                _ => ArchiveResult::from(self as &Handle),
+                _ => ArchiveResult::from(self as &dyn Handle),
             }
         }
     }
@@ -102,14 +102,14 @@ impl Disk {
                 }
             }
             if write_pending {
-                bytes += try!(self.write_data(reader));
+                bytes += self.write_data(reader)?;
                 write_pending = false;
             }
         }
         unsafe {
             match ffi::archive_write_finish_entry(self.handle()) {
                 ffi::ARCHIVE_OK => Ok(bytes),
-                _ => Err(ArchiveError::from(self as &Handle)),
+                _ => Err(ArchiveError::from(self as &dyn Handle)),
             }
         }
     }
@@ -118,7 +118,7 @@ impl Disk {
         unsafe {
             match ffi::archive_write_close(self.handle()) {
                 ffi::ARCHIVE_OK => Ok(()),
-                _ => ArchiveResult::from(self as &Handle),
+                _ => ArchiveResult::from(self as &dyn Handle),
             }
         }
     }
@@ -138,10 +138,10 @@ impl Disk {
                     ffi::ARCHIVE_OK => {
                         if ffi::archive_write_data_block(self.handle(), buff, size, offset) !=
                            ffi::ARCHIVE_OK as isize {
-                            return Err(ArchiveError::from(self as &Handle));
+                            return Err(ArchiveError::from(self as &dyn Handle));
                         }
                     }
-                    _ => return Err(ArchiveError::from(reader as &Handle)),
+                    _ => return Err(ArchiveError::from(reader as &dyn Handle)),
                 }
             }
         }
@@ -151,7 +151,7 @@ impl Disk {
         unsafe {
             match ffi::archive_write_header(self.handle(), entry.entry()) {
                 ffi::ARCHIVE_OK => Ok(()),
-                _ => ArchiveResult::from(self as &Handle),
+                _ => ArchiveResult::from(self as &dyn Handle),
             }
         }
     }

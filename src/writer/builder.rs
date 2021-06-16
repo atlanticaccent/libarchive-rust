@@ -4,9 +4,9 @@ use std::ffi::CString;
 
 use libarchive3_sys::ffi;
 
-use archive::{ArchiveHandle, Handle, WriteFilter, WriteFormat};
-use error::{ArchiveResult, ArchiveError};
-use writer::writer::Writer;
+use crate::archive::{ArchiveHandle, Handle, WriteFilter, WriteFormat};
+use crate::error::{ArchiveResult, ArchiveError};
+use crate::writer::writer::Writer;
 
 pub struct Builder {
     handle: ArchiveHandle,
@@ -40,7 +40,7 @@ impl Builder {
         };
         match result {
             ffi::ARCHIVE_OK => Ok(()),
-            _ => ArchiveResult::from(self as &Handle),
+            _ => ArchiveResult::from(self as &dyn Handle),
         }
     }
 
@@ -74,7 +74,7 @@ impl Builder {
         };
         match result {
             ffi::ARCHIVE_OK => Ok(()),
-            _ => ArchiveResult::from(self as &Handle),
+            _ => ArchiveResult::from(self as &dyn Handle),
         }
     }
 
@@ -85,7 +85,7 @@ impl Builder {
             ffi::ARCHIVE_OK => {
                 Ok(Writer::new(self.handle))
             }
-            _ => Err(ArchiveError::from(&self as &Handle)),
+            _ => Err(ArchiveError::from(&self as &dyn Handle)),
         }
     }
 }

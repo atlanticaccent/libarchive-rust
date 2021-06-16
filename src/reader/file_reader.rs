@@ -4,9 +4,9 @@ use std::path::Path;
 
 use libarchive3_sys::ffi;
 
-use archive::{ArchiveHandle, Handle};
-use entry::BorrowedEntry;
-use error::{ArchiveResult, ArchiveError};
+use crate::archive::{ArchiveHandle, Handle};
+use crate::entry::BorrowedEntry;
+use crate::error::{ArchiveResult, ArchiveError};
 use super::{Builder, Reader};
 
 const BLOCK_SIZE: usize = 10240;
@@ -24,7 +24,7 @@ impl FileReader {
                 ffi::ARCHIVE_OK => {
                     Ok(Self::new(builder.into()))
                 }
-                _ => Err(ArchiveError::from(&builder as &Handle)),
+                _ => Err(ArchiveError::from(&builder as &dyn Handle)),
             }
         }
     }
@@ -41,7 +41,7 @@ impl FileReader {
                 ffi::ARCHIVE_OK => {
                     Ok(Self::new(builder.into()))
                 }
-                _ => Err(ArchiveError::from(&builder as &Handle)),
+                _ => Err(ArchiveError::from(&builder as &dyn Handle)),
             }
         }
     }

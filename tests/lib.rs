@@ -15,11 +15,11 @@ fn reading_from_file() {
     builder.support_filter(ReadFilter::All).ok();
     let mut reader = builder.open_file(tar).ok().unwrap();
     reader.next_header();
-    // let entry: &archive::Entry = &reader.entry;
+    // let entry: &archive::Entry = &dyn reader.entry;
     // println!("{:?}", entry.pathname());
     // println!("{:?}", entry.size());
     // for entry in reader.entries() {
-    //     let file = entry as &archive::Entry;
+    //     let file = entry as &dyn archive::Entry;
     //     println!("{:?}", file.pathname());
     //     println!("{:?}", file.size());
     // }
