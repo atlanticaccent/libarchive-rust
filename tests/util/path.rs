@@ -1,18 +1,15 @@
-use std::env;
+use std::io;
 use std::path::PathBuf;
 
-pub fn exe_path() -> PathBuf {
-    env::current_exe().unwrap()
+pub fn test_root() -> PathBuf {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    root.join("tests")
 }
 
-pub fn root() -> PathBuf {
-    exe_path().parent().unwrap().parent().unwrap().parent().unwrap().join("tests")
+pub fn fixtures() -> io::Result<PathBuf> {
+    Ok(test_root().join("fixtures"))
 }
 
-pub fn fixtures() -> PathBuf {
-    root().join("fixtures")
-}
-
-pub fn fixture(name: &str) -> PathBuf {
-    fixtures().join(name)
+pub fn fixture(name: &str) -> io::Result<PathBuf> {
+    Ok(fixtures()?.join(name))
 }
